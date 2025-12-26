@@ -27,8 +27,12 @@ env/
 .DS_Store
 Thumbs.db
 
-# Data
-data/orja.sqlite
+# Data and models
+data/
+models/
+
+# Vendor code (llama.cpp)
+vendor/
 
 # Temporary files
 *.tmp

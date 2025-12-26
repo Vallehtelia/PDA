@@ -38,6 +38,20 @@ class MemoryStore:
                 )
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS pipeline_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp_utc TEXT NOT NULL,
+                    session_id TEXT NOT NULL,
+                    step_name TEXT NOT NULL,
+                    input_summary TEXT,
+                    output_json TEXT,
+                    success INTEGER NOT NULL,
+                    latency_ms REAL
+                )
+                """
+            )
             conn.commit()
 
     def add_message(self, role: str, content: str, session_id: str, timestamp: datetime) -> None:
@@ -49,13 +63,58 @@ class MemoryStore:
             )
             conn.commit()
 
-    def recent_messages(self, limit: int = 20) -> List[Message]:
+    def add_pipeline_event(
+        self,
+        *,
+        session_id: str,
+        step_name: str,
+        input_summary: str,
+        output_json: str,
+        success: bool,
+        latency_ms: float | None,
+        timestamp: datetime,
+    ) -> None:
+        iso_ts = timestamp.isoformat()
         with self._get_connection() as conn:
-            cursor = conn.execute(
-                "SELECT id, timestamp_utc, role, content, session_id FROM messages "
-                "ORDER BY id DESC LIMIT ?",
-                (limit,),
+            conn.execute(
+                """
+                INSERT INTO pipeline_events (
+                    timestamp_utc,
+                    session_id,
+                    step_name,
+                    input_summary,
+                    output_json,
+                    success,
+                    latency_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    iso_ts,
+                    session_id,
+                    step_name,
+                    input_summary,
+                    output_json,
+                    1 if success else 0,
+                    latency_ms,
+                ),
             )
+            conn.commit()
+
+    def recent_messages(self, limit: int = 20, session_id: str | None = None) -> List[Message]:
+        with self._get_connection() as conn:
+            if session_id:
+                cursor = conn.execute(
+                    "SELECT id, timestamp_utc, role, content, session_id FROM messages "
+                    "WHERE session_id = ? "
+                    "ORDER BY id DESC LIMIT ?",
+                    (session_id, limit),
+                )
+            else:
+                cursor = conn.execute(
+                    "SELECT id, timestamp_utc, role, content, session_id FROM messages "
+                    "ORDER BY id DESC LIMIT ?",
+                    (limit,),
+                )
             rows = cursor.fetchall()
         return [
             Message(

@@ -10,6 +10,7 @@ from rich.console import Console
 
 from orja.core.config import load_config
 from orja.core.logger import setup_logger
+from orja.core.pipeline import Pipeline
 from orja.core.router import Router
 from orja.memory.db import MemoryStore
 
@@ -28,13 +29,16 @@ def run() -> None:
 
     db_path = project_root / config["database"]["path"]
     memory = MemoryStore(db_path)
-    router = Router()
+
+    pipeline_enabled = config.get("pipeline", {}).get("enabled", True)
+    pipeline = Pipeline(memory, config, logger) if pipeline_enabled else None
+    router = Router(memory, config) if not pipeline_enabled else None
 
     wake_phrase = config["assistant"]["wake_phrase"].lower()
     session_id = f"session-{uuid4()}"
     hint_shown = False
 
-    console.print(f"[bold green]Orja[/bold green] käynnissä. Käytä herätekoodia '{wake_phrase}'.")
+    console.print(f"[bold green]Orja[/bold green] running. Use wake phrase '{wake_phrase}'.")
     logger.info("Assistant started with session_id=%s", session_id)
 
     try:
@@ -50,13 +54,13 @@ def run() -> None:
 
             if not user_input.lower().startswith(wake_phrase):
                 if not hint_shown:
-                    console.print(f"Käytä herätettä '{wake_phrase}' aloittaaksesi.")
+                    console.print(f"Use the wake phrase '{wake_phrase}' to start.")
                     hint_shown = True
                 continue
 
             command = user_input[len(wake_phrase) :].strip()
             if not command:
-                console.print("Mitä haluaisit tehdä?")
+                console.print("What would you like to do?")
                 continue
 
             memory.add_message(
@@ -67,10 +71,15 @@ def run() -> None:
             )
 
             try:
-                response = router.dispatch(command)
+                if pipeline is not None:
+                    response = pipeline.handle_user_request(command, session_id)
+                elif router is not None:
+                    response = router.dispatch(command)
+                else:
+                    response = "No router available."
             except Exception as exc:  # pragma: no cover - defensive
                 logger.exception("Routing failed: %s", exc)
-                response = "Tapahtui virhe. Yritä uudelleen."
+                response = "An error occurred. Please try again."
 
             memory.add_message(
                 role="assistant",
@@ -83,10 +92,10 @@ def run() -> None:
             logger.info("Handled command: %s", command)
 
     except KeyboardInterrupt:
-        console.print("\nKeskeytettiin. Näkemiin!")
+        console.print("\nInterrupted. Bye!")
         logger.info("Assistant stopped via KeyboardInterrupt")
     except Exception as exc:  # pragma: no cover - defensive
         logger.exception("Assistant crashed: %s", exc)
-        console.print(f"Tapahtui odottamaton virhe: {exc}")
+        console.print(f"Unexpected error: {exc}")
         sys.exit(1)
 

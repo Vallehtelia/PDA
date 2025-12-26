@@ -7,5 +7,5 @@ from zoneinfo import ZoneInfo
 def time_skill(_: str) -> str:
     tz = ZoneInfo("Europe/Helsinki")
     now_local = datetime.now(tz)
-    return f"Kello on {now_local:%H:%M:%S} Suomen aikaa."
+    return f"The current time in Finland is {now_local:%H:%M:%S}."
 

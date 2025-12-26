@@ -1,13 +1,46 @@
 assistant:
   name: orja
-  wake_phrase: hei orja
+  wake_phrase: hey slave
   timezone: Europe/Helsinki
+dev:
+  reload_prompts: true
+pipeline:
+  enabled: true
+  max_history_messages: 6
+agents:
+  evaluator:
+    enabled: true
+    max_tokens: 80
+  router:
+    enabled: true
+    max_tokens: 80
+  responder:
+    enabled: true
+    max_tokens: 200
 database:
   path: data/orja.sqlite
 logging:
   file: logs/orja.log
   level: INFO
 llm:
-  provider: local
-  model: placeholder
+  backend: llama_cpp_cli
+  json_strict: true
+  system_prompt: "You are Orja, a concise and practical assistant. Reply in English with brief, helpful answers."
+  language: en
+  history_messages: 6
+  llama_cpp:
+    bin_path: vendor/llama.cpp/build/bin/llama-cli
+    model_path: models/SmolLM2-360M-Instruct-Q4_K_M.gguf
+    threads: 4
+    ctx_size: 2048
+    max_tokens: 160
+    temperature: 0.7
+    top_p: 0.9
+    repeat_penalty: 1.1
+    batch_size: 256
+    timeout_sec: 45
+    server:
+      enabled: true
+      host: 127.0.0.1
+      port: 8080
 

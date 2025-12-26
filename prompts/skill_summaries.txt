@@ -1,0 +1,4 @@
+time: returns the current time in Finland. Arguments: {} (no fields). Examples: "what time is it?", "what's the time", "current time", "clock", "time now", "time in Finland".
+help: lists available commands and the wake phrase. Arguments: {} (no fields). Examples: "help", "what can you do", "list commands", "show help".
+timer: sets a placeholder timer for the given minutes. Arguments: {"minutes": <int>} (minutes optional if not provided). Examples: "set a timer for 5 minutes", "start a timer", "timer 10 minutes", "remind me in 2 minutes", "set alarm 3 minutes".
+

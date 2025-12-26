@@ -7,8 +7,8 @@ class LocalLLM:
     def generate(self, prompt: str) -> str:
         safe_prompt = shorten(prompt, width=240, placeholder="...")
         return (
-            "Paikallinen vastaus (placeholder): "
+            "Local response (placeholder): "
             f"{safe_prompt} "
-            "Voin auttaa perusasioissa lyhyesti."
+            "I can help with basic tasks briefly."
         )
 
