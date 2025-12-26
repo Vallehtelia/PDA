@@ -1,0 +1,13 @@
+assistant:
+  name: orja
+  wake_phrase: hei orja
+  timezone: Europe/Helsinki
+database:
+  path: data/orja.sqlite
+logging:
+  file: logs/orja.log
+  level: INFO
+llm:
+  provider: local
+  model: placeholder
+

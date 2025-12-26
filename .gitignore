@@ -27,8 +27,8 @@ env/
 .DS_Store
 Thumbs.db
 
-# Data (uncomment if you want to ignore data files)
-# data/
+# Data
+data/orja.sqlite
 
 # Temporary files
 *.tmp
